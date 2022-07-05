@@ -326,7 +326,7 @@ Error OS::shell_open(String p_uri) {
 	return ERR_UNAVAILABLE;
 }
 
-Error OS:register_protocol(String p_protocol) {
+Error OS::register_protocol(String p_protocol) {
 	return ERR_UNAVAILABLE;
 }
 

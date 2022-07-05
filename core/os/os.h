@@ -156,7 +156,7 @@ public:
 
 	// E.g. register_protocol("myapp") will redirect links like myapp://uri to the executable
 	virtual Error register_protocol(String p_protocol);
-	virtual Error deregister_protocol(String p_protocol);
+	virtual Error unregister_protocol(String p_protocol);
 
 	virtual bool has_environment(const String &p_var) const = 0;
 	virtual String get_environment(const String &p_var) const = 0;

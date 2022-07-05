@@ -44,6 +44,7 @@
 #include "servers/audio_server.h"
 #include "servers/rendering/rendering_server_default.h"
 #include "windows_terminal_logger.h"
+#include "winreg.h"
 
 #include <avrt.h>
 #include <bcrypt.h>
@@ -688,11 +689,48 @@ Error OS_Windows::shell_open(String p_uri) {
 }
 
 Error OS_Windows::register_protocol(String p_protocol) {
-	// todo
+
+	// Create the subkey of HKEY_CLASSES_ROOT if it does not exist
+	HKEY hKey;
+	LONG openRes = RegCreateKeyEx(HKEY_CLASSES_ROOT, p_protocol.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr);
+	if (openRes != ERROR_SUCCESS) {
+		return FAILED;
+	}
+
+	// Set some headers
+	char* protoName = "URL:Custom Godot Protocol\0";
+	LONG setRes1 = RegSetValueEx(hKey, nullptr, 0, REG_SZ, (BYTE *) protoName, sizeof(protoName) / sizeof(char));
+	LONG setRes2 = RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, (BYTE *) "", 0);
+	// Open alert to test
+	char* testCommand = "C:\\Program Files\\Alert\\alert.exe\0\"%1\"\0\0";
+	LONG setRes3 = RegSetValueEx(hKey, "shell\\open\\command", 0, REG_MULTI_SZ, (BYTE *) testCommand, sizeof(testCommand) / sizeof(char));
+
+	// Close the key
+	LONG closeRes = RegCloseKey(hKey);
+
+	// Check if all operations were successful
+	if (setRes1 != ERROR_SUCCESS || setRes2 != ERROR_SUCCESS || setRes3 != ERROR_SUCCESS || closeRes != ERROR_SUCCESS) {
+		return FAILED;
+	}
+	return OK;
 }
 
 Error OS_Windows::unregister_protocol(String p_protocol) {
-	// todo
+	
+	// Check if the subkey exists
+	HKEY hKey;
+	LONG openRes = RegOpenKeyEx(HKEY_CLASSES_ROOT, p_protocol.utf8().get_data(), 0, KEY_ALL_ACCESS, &hKey);
+	if (openRes != ERROR_SUCCESS) {
+		return FAILED;
+	}
+
+	// Delete the subkey
+	LONG deleteRes = RegDeleteKey(hKey, p_protocol.utf8().get_data());
+	if (deleteRes != ERROR_SUCCESS) {
+		return FAILED;
+	}
+
+	return OK;
 }
 
 String OS_Windows::get_locale() const {
