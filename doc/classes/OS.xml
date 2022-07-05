@@ -521,6 +521,22 @@
 				Shows all resources currently used by the game.
 			</description>
 		</method>
+		<method name="register_protocol">
+			<return type="int" enum="Error" />
+			<argument index="0" name="protocol" type="String" />
+			<description>
+				Associates links that look like [code]protocol://uri[/code] with this game's executable.
+				This should open your game when using shell_open with this link, or when entering a link into a web browser.
+				Everything after the [code]:[/code], so [code]//uri[/code] in this case, will be passed as a commandline argument.
+			</description>
+		</method>
+		<method name="unregister_protocol">
+			<return type="int" enum="Error" />
+			<argument index="0" name="protocol" type="String" />
+			<description>
+				Removes the association between links that look like [code]protocol://uri[/code] and this game's executable.
+			</description>
+		</method>
 		<method name="request_permission">
 			<return type="bool" />
 			<argument index="0" name="name" type="String" />
