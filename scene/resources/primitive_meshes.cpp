@@ -439,12 +439,15 @@ void CapsuleMesh::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "height", PROPERTY_HINT_RANGE, "0.001,100.0,0.001,or_greater,suffix:m"), "set_height", "get_height");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "radial_segments", PROPERTY_HINT_RANGE, "1,100,1,or_greater"), "set_radial_segments", "get_radial_segments");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "rings", PROPERTY_HINT_RANGE, "1,100,1,or_greater"), "set_rings", "get_rings");
+
+	ADD_LINKED_PROPERTY("radius", "height");
+	ADD_LINKED_PROPERTY("height", "radius");
 }
 
 void CapsuleMesh::set_radius(const float p_radius) {
 	radius = p_radius;
 	if (radius > height * 0.5) {
-		radius = height * 0.5;
+		height = radius * 2.0;
 	}
 	_request_update();
 }
@@ -456,7 +459,7 @@ float CapsuleMesh::get_radius() const {
 void CapsuleMesh::set_height(const float p_height) {
 	height = p_height;
 	if (radius > height * 0.5) {
-		height = radius * 2;
+		radius = height * 0.5;
 	}
 	_request_update();
 }
@@ -2187,12 +2190,12 @@ RibbonTrailMesh::RibbonTrailMesh() {
 /*  TextMesh                                                             */
 /*************************************************************************/
 
-void TextMesh::_generate_glyph_mesh_data(uint32_t p_hash, const Glyph &p_gl) const {
-	if (cache.has(p_hash)) {
+void TextMesh::_generate_glyph_mesh_data(const GlyphMeshKey &p_key, const Glyph &p_gl) const {
+	if (cache.has(p_key)) {
 		return;
 	}
 
-	GlyphMeshData &gl_data = cache[p_hash];
+	GlyphMeshData &gl_data = cache[p_key];
 
 	Dictionary d = TS->font_get_glyph_contours(p_gl.font_rid, p_gl.font_size, p_gl.index);
 	Vector2 origin = Vector2(p_gl.x_off, p_gl.y_off) * pixel_size;
@@ -2434,11 +2437,9 @@ void TextMesh::_create_mesh_array(Array &p_arr) const {
 			continue;
 		}
 		if (glyphs[i].font_rid != RID()) {
-			uint32_t hash = hash_one_uint64(glyphs[i].font_rid.get_id());
-			hash = hash_djb2_one_32(glyphs[i].index, hash);
-
-			_generate_glyph_mesh_data(hash, glyphs[i]);
-			GlyphMeshData &gl_data = cache[hash];
+			GlyphMeshKey key = GlyphMeshKey(glyphs[i].font_rid.get_id(), glyphs[i].index);
+			_generate_glyph_mesh_data(key, glyphs[i]);
+			GlyphMeshData &gl_data = cache[key];
 
 			p_size += glyphs[i].repeat * gl_data.triangles.size() * ((has_depth) ? 2 : 1);
 			i_size += glyphs[i].repeat * gl_data.triangles.size() * ((has_depth) ? 2 : 1);
@@ -2493,10 +2494,9 @@ void TextMesh::_create_mesh_array(Array &p_arr) const {
 			continue;
 		}
 		if (glyphs[i].font_rid != RID()) {
-			uint32_t hash = hash_one_uint64(glyphs[i].font_rid.get_id());
-			hash = hash_djb2_one_32(glyphs[i].index, hash);
-
-			const GlyphMeshData &gl_data = cache[hash];
+			GlyphMeshKey key = GlyphMeshKey(glyphs[i].font_rid.get_id(), glyphs[i].index);
+			_generate_glyph_mesh_data(key, glyphs[i]);
+			const GlyphMeshData &gl_data = cache[key];
 
 			int64_t ts = gl_data.triangles.size();
 			const Vector2 *ts_ptr = gl_data.triangles.ptr();

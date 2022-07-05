@@ -157,6 +157,7 @@ JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_setup(JNIEnv *env, jc
 		memfree(cmdline);
 	}
 
+	// Note: --help and --version return ERR_HELP, but this should be translated to 0 if exit codes are propagated.
 	if (err != OK) {
 		return; // should exit instead and print the error
 	}
@@ -303,15 +304,6 @@ JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_doubleTap(JNIEnv *env
 	}
 
 	input_handler->process_double_tap(p_button_mask, Point2(p_x, p_y));
-}
-
-// Called on the UI thread
-JNIEXPORT void JNICALL Java_org_godotengine_godot_GodotLib_scroll(JNIEnv *env, jclass clazz, jint p_x, jint p_y) {
-	if (step.get() <= 0) {
-		return;
-	}
-
-	input_handler->process_scroll(Point2(p_x, p_y));
 }
 
 // Called on the UI thread

@@ -1895,7 +1895,6 @@ void ProjectManager::_notification(int p_what) {
 			}
 			if (asset_library) {
 				real_t size = get_size().x / EDSCALE;
-				asset_library->set_columns(size < 1000 ? 1 : 2);
 				// Adjust names of tabs to fit the new size.
 				if (size < 650) {
 					local_projects_hb->set_name(TTR("Local"));
@@ -2792,10 +2791,7 @@ ProjectManager::ProjectManager() {
 		center_box->add_child(settings_hb);
 	}
 
-	// Asset Library can't work on Web editor for now as most assets are sourced
-	// directly from GitHub which does not set CORS.
-#ifndef JAVASCRIPT_ENABLED
-	if (StreamPeerSSL::is_available()) {
+	if (AssetLibraryEditorPlugin::is_available()) {
 		asset_library = memnew(EditorAssetLibrary(true));
 		asset_library->set_name(TTR("Asset Library Projects"));
 		tabs->add_child(asset_library);
@@ -2803,7 +2799,6 @@ ProjectManager::ProjectManager() {
 	} else {
 		WARN_PRINT("Asset Library not available, as it requires SSL to work.");
 	}
-#endif
 
 	{
 		// Dialogs

@@ -201,10 +201,12 @@ class DisplayServerX11 : public DisplayServer {
 		HashMap<int, Vector2> pen_pressure_range;
 		HashMap<int, Vector2> pen_tilt_x_range;
 		HashMap<int, Vector2> pen_tilt_y_range;
+		HashMap<int, bool> pen_inverted_devices;
 		XIEventMask all_event_mask;
 		HashMap<int, Vector2> state;
 		double pressure;
 		bool pressure_supported;
+		bool pen_inverted;
 		Vector2 tilt;
 		Vector2 mouse_pos_to_filter;
 		Vector2 relative_motion;
@@ -265,6 +267,7 @@ class DisplayServerX11 : public DisplayServer {
 
 	void _update_real_mouse_position(const WindowData &wd);
 	bool _window_maximize_check(WindowID p_window, const char *p_atom_name) const;
+	bool _window_fullscreen_check(WindowID p_window) const;
 	void _update_size_hints(WindowID p_window);
 	void _set_wm_fullscreen(WindowID p_window, bool p_enabled);
 	void _set_wm_maximized(WindowID p_window, bool p_enabled);

@@ -300,7 +300,7 @@ void Node::_propagate_exit_tree() {
 	if (data.parent) {
 		Variant c = this;
 		const Variant *cptr = &c;
-		data.parent->emit_signalp(SNAME("child_exited_tree"), &cptr, 1);
+		data.parent->emit_signalp(SNAME("child_exiting_tree"), &cptr, 1);
 	}
 
 	// exit groups
@@ -384,11 +384,7 @@ void Node::_move_child(Node *p_child, int p_pos, bool p_ignore_end) {
 	for (int i = motion_from; i <= motion_to; i++) {
 		data.children[i]->notification(NOTIFICATION_MOVED_IN_PARENT);
 	}
-	for (const KeyValue<StringName, GroupData> &E : p_child->data.grouped) {
-		if (E.value.group) {
-			E.value.group->changed = true;
-		}
-	}
+	p_child->_propagate_groups_dirty();
 
 	data.blocked--;
 }
@@ -408,6 +404,18 @@ void Node::raise() {
 	}
 }
 
+void Node::_propagate_groups_dirty() {
+	for (const KeyValue<StringName, GroupData> &E : data.grouped) {
+		if (E.value.group) {
+			E.value.group->changed = true;
+		}
+	}
+
+	for (int i = 0; i < data.children.size(); i++) {
+		data.children[i]->_propagate_groups_dirty();
+	}
+}
+
 void Node::add_child_notify(Node *p_child) {
 	// to be used when not wanted
 }
@@ -420,6 +428,9 @@ void Node::move_child_notify(Node *p_child) {
 	// to be used when not wanted
 }
 
+void Node::owner_changed_notify() {
+}
+
 void Node::set_physics_process(bool p_process) {
 	if (data.physics_process == p_process) {
 		return;
@@ -428,9 +439,9 @@ void Node::set_physics_process(bool p_process) {
 	data.physics_process = p_process;
 
 	if (data.physics_process) {
-		add_to_group("physics_process", false);
+		add_to_group(SNAME("_physics_process"), false);
 	} else {
-		remove_from_group("physics_process");
+		remove_from_group(SNAME("_physics_process"));
 	}
 }
 
@@ -446,9 +457,9 @@ void Node::set_physics_process_internal(bool p_process_internal) {
 	data.physics_process_internal = p_process_internal;
 
 	if (data.physics_process_internal) {
-		add_to_group("physics_process_internal", false);
+		add_to_group(SNAME("_physics_process_internal"), false);
 	} else {
-		remove_from_group("physics_process_internal");
+		remove_from_group(SNAME("_physics_process_internal"));
 	}
 }
 
@@ -759,9 +770,9 @@ void Node::set_process(bool p_process) {
 	data.process = p_process;
 
 	if (data.process) {
-		add_to_group("process", false);
+		add_to_group(SNAME("_process"), false);
 	} else {
-		remove_from_group("process");
+		remove_from_group(SNAME("_process"));
 	}
 }
 
@@ -777,9 +788,9 @@ void Node::set_process_internal(bool p_process_internal) {
 	data.process_internal = p_process_internal;
 
 	if (data.process_internal) {
-		add_to_group("process_internal", false);
+		add_to_group(SNAME("_process_internal"), false);
 	} else {
-		remove_from_group("process_internal");
+		remove_from_group(SNAME("_process_internal"));
 	}
 }
 
@@ -796,19 +807,19 @@ void Node::set_process_priority(int p_priority) {
 	}
 
 	if (is_processing()) {
-		data.tree->make_group_changed("process");
+		data.tree->make_group_changed(SNAME("_process"));
 	}
 
 	if (is_processing_internal()) {
-		data.tree->make_group_changed("process_internal");
+		data.tree->make_group_changed(SNAME("_process_internal"));
 	}
 
 	if (is_physics_processing()) {
-		data.tree->make_group_changed("physics_process");
+		data.tree->make_group_changed(SNAME("_physics_process"));
 	}
 
 	if (is_physics_processing_internal()) {
-		data.tree->make_group_changed("physics_process_internal");
+		data.tree->make_group_changed(SNAME("_physics_process_internal"));
 	}
 }
 
@@ -1544,6 +1555,8 @@ void Node::_set_owner_nocheck(Node *p_owner) {
 	data.owner = p_owner;
 	data.owner->data.owned.push_back(this);
 	data.OW = data.owner->data.owned.back();
+
+	owner_changed_notify();
 }
 
 void Node::_release_unique_name_in_owner() {
@@ -2973,7 +2986,7 @@ void Node::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("tree_exiting"));
 	ADD_SIGNAL(MethodInfo("tree_exited"));
 	ADD_SIGNAL(MethodInfo("child_entered_tree", PropertyInfo(Variant::OBJECT, "node", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT, "Node")));
-	ADD_SIGNAL(MethodInfo("child_exited_tree", PropertyInfo(Variant::OBJECT, "node", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT, "Node")));
+	ADD_SIGNAL(MethodInfo("child_exiting_tree", PropertyInfo(Variant::OBJECT, "node", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT, "Node")));
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "unique_name_in_owner", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NO_EDITOR), "set_unique_name_in_owner", "is_unique_name_in_owner");

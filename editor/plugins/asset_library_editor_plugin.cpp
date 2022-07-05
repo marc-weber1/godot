@@ -32,6 +32,7 @@
 
 #include "core/input/input.h"
 #include "core/io/json.h"
+#include "core/io/stream_peer_ssl.h"
 #include "core/os/keyboard.h"
 #include "core/version.h"
 #include "editor/editor_file_dialog.h"
@@ -290,12 +291,15 @@ EditorAssetLibraryItemDescription::EditorAssetLibraryItemDescription() {
 	hbox->add_child(previews_vbox);
 	previews_vbox->add_theme_constant_override("separation", 15 * EDSCALE);
 	previews_vbox->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+	previews_vbox->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 
 	preview = memnew(TextureRect);
 	previews_vbox->add_child(preview);
 	preview->set_ignore_texture_size(true);
 	preview->set_stretch_mode(TextureRect::STRETCH_KEEP_ASPECT_CENTERED);
 	preview->set_custom_minimum_size(Size2(640 * EDSCALE, 345 * EDSCALE));
+	preview->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+	preview->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 
 	previews_bg = memnew(PanelContainer);
 	previews_vbox->add_child(previews_bg);
@@ -618,6 +622,10 @@ void EditorAssetLibrary::_notification(int p_what) {
 				downloads_scroll->set_visible(!no_downloads);
 			}
 
+		} break;
+
+		case NOTIFICATION_RESIZED: {
+			_update_asset_items_columns();
 		} break;
 
 		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
@@ -1209,7 +1217,7 @@ void EditorAssetLibrary::_http_request_completed(int p_status, int p_code, const
 			library_vb->add_child(asset_top_page);
 
 			asset_items = memnew(GridContainer);
-			asset_items->set_columns(2);
+			_update_asset_items_columns();
 			asset_items->add_theme_constant_override("h_separation", 10 * EDSCALE);
 			asset_items->add_theme_constant_override("v_separation", 10 * EDSCALE);
 
@@ -1375,12 +1383,17 @@ void EditorAssetLibrary::_install_external_asset(String p_zip_path, String p_tit
 	emit_signal(SNAME("install_asset"), p_zip_path, p_title);
 }
 
-void EditorAssetLibrary::disable_community_support() {
-	support->get_popup()->set_item_checked(SUPPORT_COMMUNITY, false);
+void EditorAssetLibrary::_update_asset_items_columns() {
+	int new_columns = get_size().x / (450.0 * EDSCALE);
+	new_columns = MAX(1, new_columns);
+
+	if (new_columns != asset_items->get_columns()) {
+		asset_items->set_columns(new_columns);
+	}
 }
 
-void EditorAssetLibrary::set_columns(const int p_columns) {
-	asset_items->set_columns(p_columns);
+void EditorAssetLibrary::disable_community_support() {
+	support->get_popup()->set_item_checked(SUPPORT_COMMUNITY, false);
 }
 
 void EditorAssetLibrary::_bind_methods() {
@@ -1538,7 +1551,7 @@ EditorAssetLibrary::EditorAssetLibrary(bool p_templates_only) {
 	library_vb->add_child(asset_top_page);
 
 	asset_items = memnew(GridContainer);
-	asset_items->set_columns(2);
+	_update_asset_items_columns();
 	asset_items->add_theme_constant_override("h_separation", 10 * EDSCALE);
 	asset_items->add_theme_constant_override("v_separation", 10 * EDSCALE);
 
@@ -1587,6 +1600,16 @@ EditorAssetLibrary::EditorAssetLibrary(bool p_templates_only) {
 }
 
 ///////
+
+bool AssetLibraryEditorPlugin::is_available() {
+#ifdef JAVASCRIPT_ENABLED
+	// Asset Library can't work on Web editor for now as most assets are sourced
+	// directly from GitHub which does not set CORS.
+	return false;
+#else
+	return StreamPeerSSL::is_available();
+#endif
+}
 
 void AssetLibraryEditorPlugin::make_visible(bool p_visible) {
 	if (p_visible) {
