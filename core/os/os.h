@@ -152,6 +152,10 @@ public:
 	virtual Error shell_open(String p_uri);
 	virtual Error set_cwd(const String &p_cwd);
 
+	// E.g. register_protocol("myapp") will redirect links like myapp://uri to the executable
+	virtual Error register_protocol(String p_protocol);
+	virtual Error deregister_protocol(String p_protocol);
+
 	virtual bool has_environment(const String &p_var) const = 0;
 	virtual String get_environment(const String &p_var) const = 0;
 	virtual bool set_environment(const String &p_var, const String &p_value) const = 0;

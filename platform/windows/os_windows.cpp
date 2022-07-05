@@ -687,6 +687,14 @@ Error OS_Windows::shell_open(String p_uri) {
 	}
 }
 
+Error OS_Windows::register_protocol(String p_protocol) {
+	// todo
+}
+
+Error OS_Windows::unregister_protocol(String p_protocol) {
+	// todo
+}
+
 String OS_Windows::get_locale() const {
 	const _WinLocale *wl = &_win_locales[0];
 

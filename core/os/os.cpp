@@ -311,6 +311,14 @@ Error OS::shell_open(String p_uri) {
 	return ERR_UNAVAILABLE;
 }
 
+Error OS:register_protocol(String p_protocol) {
+	return ERR_UNAVAILABLE;
+}
+
+Error OS::unregister_protocol(String p_protocol) {
+	return ERR_UNAVAILABLE;
+}
+
 // implement these with the canvas?
 
 uint64_t OS::get_static_memory_usage() const {
