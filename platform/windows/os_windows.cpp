@@ -689,43 +689,61 @@ Error OS_Windows::shell_open(String p_uri) {
 }
 
 Error OS_Windows::register_protocol(String p_protocol) {
+	// Set it to open the game we currently have open by copying the commandline args
+	// ( get_cmdline_args() don't work for some reason )
+	String openCommand = String(GetCommandLine()) + " --uri=\"%1\"";
+
 
 	// Create the subkey of HKEY_CLASSES_ROOT if it does not exist
 	HKEY hKey;
-	LONG openRes = RegCreateKeyEx(HKEY_CLASSES_ROOT, p_protocol.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr);
+	String keyPath = "SOFTWARE\\Classes\\" + p_protocol;
+	LONG openRes = RegCreateKeyEx(HKEY_CURRENT_USER, keyPath.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr);
 	if (openRes != ERROR_SUCCESS) {
 		return FAILED;
 	}
 
 	// Set some headers
-	char* protoName = "URL:Custom Godot Protocol\0";
-	LONG setRes1 = RegSetValueEx(hKey, nullptr, 0, REG_SZ, (BYTE *) protoName, sizeof(protoName) / sizeof(char));
-	LONG setRes2 = RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, (BYTE *) "", 0);
-	// Open alert to test
-	char* testCommand = "C:\\Program Files\\Alert\\alert.exe\0\"%1\"\0\0";
-	LONG setRes3 = RegSetValueEx(hKey, "shell\\open\\command", 0, REG_MULTI_SZ, (BYTE *) testCommand, sizeof(testCommand) / sizeof(char));
-
+	String protoName = "URL:" + p_protocol;
+	LONG setRes1 = RegSetValueEx(hKey, nullptr, 0, REG_SZ, (BYTE*) protoName.utf8().get_data(), protoName.utf8().length() + 1);
+	LONG setRes2 = RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, (BYTE*) "", 0);
 	// Close the key
 	LONG closeRes = RegCloseKey(hKey);
 
 	// Check if all operations were successful
-	if (setRes1 != ERROR_SUCCESS || setRes2 != ERROR_SUCCESS || setRes3 != ERROR_SUCCESS || closeRes != ERROR_SUCCESS) {
+	if (setRes1 != ERROR_SUCCESS || setRes2 != ERROR_SUCCESS || closeRes != ERROR_SUCCESS) {
 		return FAILED;
 	}
+	
+	// Set the shell/open/command subkey
+	String shellPath = "SOFTWARE\\Classes\\" + p_protocol + "\\shell\\open\\command";
+	openRes = RegCreateKeyEx(HKEY_CURRENT_USER, shellPath.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr);
+	if (openRes != ERROR_SUCCESS) {
+		return FAILED;
+	}
+	LONG setRes3 = RegSetValueEx(hKey, nullptr, 0, REG_SZ, (BYTE*) openCommand.utf8().get_data(), openCommand.utf8().length() + 1);
+	// Close the key
+	LONG closeRes2 = RegCloseKey(hKey);
+
+	// Check if all operations were successful
+	if (setRes3 != ERROR_SUCCESS || closeRes2 != ERROR_SUCCESS) {
+		return FAILED;
+	}
+	
 	return OK;
 }
 
 Error OS_Windows::unregister_protocol(String p_protocol) {
 	
-	// Check if the subkey exists
+	// Check if the registration exists
 	HKEY hKey;
-	LONG openRes = RegOpenKeyEx(HKEY_CLASSES_ROOT, p_protocol.utf8().get_data(), 0, KEY_ALL_ACCESS, &hKey);
+	String keyPath = "SOFTWARE\\Classes\\";
+	LONG openRes = RegOpenKeyEx(HKEY_CURRENT_USER, keyPath.utf8().get_data(), 0, KEY_ALL_ACCESS, &hKey);
 	if (openRes != ERROR_SUCCESS) {
 		return FAILED;
 	}
 
-	// Delete the subkey
-	LONG deleteRes = RegDeleteKey(hKey, p_protocol.utf8().get_data());
+	// Delete all subkeys
+	LONG deleteRes = RegDeleteTree(hKey, p_protocol.utf8().get_data());
 	if (deleteRes != ERROR_SUCCESS) {
 		return FAILED;
 	}
