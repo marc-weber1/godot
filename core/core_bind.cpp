@@ -245,12 +245,10 @@ Error OS::shell_open(String p_uri) {
 }
 
 Error OS::register_protocol(String p_protocol) {
-	// Check if p_protocol is utf8?
 	return ::OS::get_singleton()->register_protocol(p_protocol);
 }
 
 Error OS::unregister_protocol(String p_protocol) {
-	// Check if p_protocol is utf8?
 	return ::OS::get_singleton()->unregister_protocol(p_protocol);
 }
 
