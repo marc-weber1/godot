@@ -249,7 +249,7 @@ Error OS_LinuxBSD::register_protocol(String p_protocol) {
 	// [Desktop Entry]
 	// Type=Application
 	// Name=MYPROTOCOL Protocol Handler
-	// Exec=/path/to/godot %u
+	// Exec=/path/to/godot --uri="%u"
 	// MimeType=x-scheme-handler/myprotocol;
 	const String desktop_entry = "[Desktop Entry]\nType=Application" + name + exec + mime;
 	// Write the desktop entry to a file.
