@@ -298,6 +298,16 @@ Error OS_OSX::shell_open(String p_uri) {
 	return OK;
 }
 
+Error OS_OSX::register_protocol(String p_protocol) {
+	WARN_PRINT("Registering protocols on macOS is done via the export dialog, not using the OS.register_protocol() method. This is because protocols are registered in the app bundle.");
+	return ERR_UNAVAILABLE;
+}
+
+Error OS_OSX::unregister_protocol(String p_protocol) {
+	WARN_PRINT("Registering protocols on macOS is done via the export dialog, not using the OS.unregister_protocol() method. This is because protocols are registered in the app bundle.");
+	return ERR_UNAVAILABLE;
+}
+
 String OS_OSX::get_locale() const {
 	NSString *locale_code = [[NSLocale preferredLanguages] objectAtIndex:0];
 	return String([locale_code UTF8String]).replace("-", "_");
