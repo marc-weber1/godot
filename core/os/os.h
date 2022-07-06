@@ -110,6 +110,8 @@ protected:
 
 	virtual bool _check_internal_feature_support(const String &p_feature) = 0;
 
+	bool _validate_protocol(const String &p_protocol);
+
 public:
 	typedef int64_t ProcessID;
 
