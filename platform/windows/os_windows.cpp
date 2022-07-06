@@ -690,7 +690,7 @@ Error OS_Windows::shell_open(String p_uri) {
 
 Error OS_Windows::register_protocol(String p_protocol) {
 	ERR_FAIL_COND_V(!_validate_protocol(p_protocol), ERR_INVALID_PARAMETER);
-	const String open_command = get_executable_path() + " --uri=\"%1\"";
+	const String open_command = "\"" + get_executable_path().replace("/", "\\") + "\" --uri=\"%1\"";
 
 	// Create the subkey of HKEY_CLASSES_ROOT if it does not exist.
 	HKEY hkey;

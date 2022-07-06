@@ -339,6 +339,7 @@ bool OS::_validate_protocol(const String &p_protocol) {
 		return false;
 	}
 	if (p_protocol[0] > 'z' || p_protocol[0] < 'a') {
+		ERR_PRINT("Invalid protocol character: " + String::chr(p_protocol[0]) + ". Protocols must start with a lowercase letter.");
 		return false;
 	}
 	for (int i = 1; i < p_protocol.length(); i++) {

@@ -243,7 +243,7 @@ Error OS_LinuxBSD::register_protocol(String p_protocol) {
 	// Generate the desktop entry.
 	const String scheme_handler = "x-scheme-handler/" + p_protocol;
 	const String name = "\nName=" + p_protocol.to_upper() + " Protocol Handler";
-	const String exec = "\nExec=" + get_executable_path() + " --uri=\"%u\"";
+	const String exec = "\nExec=\"" + get_executable_path() + "\" --uri=\"%u\"";
 	const String mime = "\nMimeType=" + scheme_handler + ";\n";
 	// Example file:
 	// [Desktop Entry]
