@@ -525,9 +525,9 @@
 			<return type="int" enum="Error" />
 			<argument index="0" name="protocol" type="String" />
 			<description>
-				Associates links that look like [code]protocol://uri[/code] with this game's executable.
-				This should open your game when using shell_open with this link, or when entering a link into a web browser.
-				The uri will be passed as an argument to your game, like: [code]yourGame.exe --uri="myapp://uri"[/code], and all arguments the current game was opened with will be used again.
+				Associates links that look like [code]protocol://uri[/code] with this executable.
+				When the OS opens a link like this, such as when the user clicks on a button in their web browser, the executable will launch with the given [code]uri[/code] as the [code]--uri[/code] command line argument, such as [code]myapp://launch/12345[/code] running [code]myapp.exe --uri="myapp://launch/12345"[/code].
+				Returns one of the [enum Error] code constants ([code]OK[/code] on success, [code]ERR_INVALID_PARAMETER[/code] if the given protocol is invalid).
 			</description>
 		</method>
 		<method name="unregister_protocol">
@@ -535,7 +535,8 @@
 			<argument index="0" name="protocol" type="String" />
 			<description>
 				Removes the association between links that look like [code]protocol://uri[/code] and this game's executable.
-				WARNING: This will remove the protocol whether or not it was registered by your game.
+				[b]Note:[/b] This will remove any protocol with this name registered on the user level, whether or not it was registered by your game. For example, it can unregister protocols registered by other Godot games.
+				Returns one of the [enum Error] code constants ([code]OK[/code] on success).
 			</description>
 		</method>
 		<method name="request_permission">

@@ -689,62 +689,59 @@ Error OS_Windows::shell_open(String p_uri) {
 }
 
 Error OS_Windows::register_protocol(String p_protocol) {
-	// Set it to open the game we currently have open by copying the commandline args
-	// ( get_cmdline_args() don't work for some reason )
-	String openCommand = String(GetCommandLine()) + " --uri=\"%1\"";
+	ERR_FAIL_COND_V(!_validate_protocol(p_protocol), ERR_INVALID_PARAMETER);
+	const String open_command = get_executable_path() + " --uri=\"%1\"";
 
-
-	// Create the subkey of HKEY_CLASSES_ROOT if it does not exist
-	HKEY hKey;
-	String keyPath = "SOFTWARE\\Classes\\" + p_protocol;
-	LONG openRes = RegCreateKeyEx(HKEY_CURRENT_USER, keyPath.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr);
-	if (openRes != ERROR_SUCCESS) {
+	// Create the subkey of HKEY_CLASSES_ROOT if it does not exist.
+	HKEY hkey;
+	String key_path = "SOFTWARE\\Classes\\" + p_protocol;
+	LONG open_res = RegCreateKeyEx(HKEY_CURRENT_USER, key_path.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hkey, nullptr);
+	if (open_res != ERROR_SUCCESS) {
 		return FAILED;
 	}
 
-	// Set some headers
-	String protoName = "URL:" + p_protocol;
-	LONG setRes1 = RegSetValueEx(hKey, nullptr, 0, REG_SZ, (BYTE*) protoName.utf8().get_data(), protoName.utf8().length() + 1);
-	LONG setRes2 = RegSetValueEx(hKey, "URL Protocol", 0, REG_SZ, (BYTE*) "", 0);
-	// Close the key
-	LONG closeRes = RegCloseKey(hKey);
+	// Set some headers.
+	String proto_name = "URL:" + p_protocol;
+	LONG set_res1 = RegSetValueEx(hkey, nullptr, 0, REG_SZ, (BYTE *)proto_name.utf8().get_data(), proto_name.utf8().length() + 1);
+	LONG set_res2 = RegSetValueEx(hkey, "URL Protocol", 0, REG_SZ, (BYTE *)"", 0);
+	// Close the key.
+	LONG close_res = RegCloseKey(hkey);
 
-	// Check if all operations were successful
-	if (setRes1 != ERROR_SUCCESS || setRes2 != ERROR_SUCCESS || closeRes != ERROR_SUCCESS) {
+	// Check if all operations were successful.
+	if (set_res1 != ERROR_SUCCESS || set_res2 != ERROR_SUCCESS || close_res != ERROR_SUCCESS) {
 		return FAILED;
 	}
-	
-	// Set the shell/open/command subkey
-	String shellPath = "SOFTWARE\\Classes\\" + p_protocol + "\\shell\\open\\command";
-	openRes = RegCreateKeyEx(HKEY_CURRENT_USER, shellPath.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr);
-	if (openRes != ERROR_SUCCESS) {
-		return FAILED;
-	}
-	LONG setRes3 = RegSetValueEx(hKey, nullptr, 0, REG_SZ, (BYTE*) openCommand.utf8().get_data(), openCommand.utf8().length() + 1);
-	// Close the key
-	LONG closeRes2 = RegCloseKey(hKey);
 
-	// Check if all operations were successful
-	if (setRes3 != ERROR_SUCCESS || closeRes2 != ERROR_SUCCESS) {
+	// Set the shell/open/command subkey.
+	String shell_path = "SOFTWARE\\Classes\\" + p_protocol + "\\shell\\open\\command";
+	open_res = RegCreateKeyEx(HKEY_CURRENT_USER, shell_path.utf8().get_data(), 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hkey, nullptr);
+	if (open_res != ERROR_SUCCESS) {
 		return FAILED;
 	}
-	
+	LONG set_res3 = RegSetValueEx(hkey, nullptr, 0, REG_SZ, (BYTE *)open_command.utf8().get_data(), open_command.utf8().length() + 1);
+	// Close the key.
+	LONG close_res2 = RegCloseKey(hkey);
+
+	// Check if all operations were successful.
+	if (set_res3 != ERROR_SUCCESS || close_res2 != ERROR_SUCCESS) {
+		return FAILED;
+	}
+
 	return OK;
 }
 
 Error OS_Windows::unregister_protocol(String p_protocol) {
-	
 	// Check if the registration exists
-	HKEY hKey;
-	String keyPath = "SOFTWARE\\Classes\\";
-	LONG openRes = RegOpenKeyEx(HKEY_CURRENT_USER, keyPath.utf8().get_data(), 0, KEY_ALL_ACCESS, &hKey);
-	if (openRes != ERROR_SUCCESS) {
+	HKEY hkey;
+	String key_path = "SOFTWARE\\Classes\\";
+	LONG open_res = RegOpenKeyEx(HKEY_CURRENT_USER, key_path.utf8().get_data(), 0, KEY_ALL_ACCESS, &hkey);
+	if (open_res != ERROR_SUCCESS) {
 		return FAILED;
 	}
 
 	// Delete all subkeys
-	LONG deleteRes = RegDeleteTree(hKey, p_protocol.utf8().get_data());
-	if (deleteRes != ERROR_SUCCESS) {
+	LONG delete_res = RegDeleteTree(hkey, p_protocol.utf8().get_data());
+	if (delete_res != ERROR_SUCCESS) {
 		return FAILED;
 	}
 
