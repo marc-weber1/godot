@@ -31,12 +31,8 @@
 #include "audio_effect_gate.h"
 
 #include "core/math/math_funcs.h"
-#include "core/os/os.h"
-#include "servers/audio_server.h"
 
 void AudioEffectGateInstance::process(const AudioFrame *p_src_frames, AudioFrame *p_dst_frames, int p_frame_count) {
-	float mix_rate = AudioServer::get_singleton()->get_mix_rate();
-
 	float signal_total_l_sqr = 0.f;
 	float signal_total_r_sqr = 0.f;
 	for (int i = 0; i < p_frame_count; i++) {
@@ -47,28 +43,29 @@ void AudioEffectGateInstance::process(const AudioFrame *p_src_frames, AudioFrame
 	float RMS_L = Math::sqrt(signal_total_l_sqr / p_frame_count);
 	float RMS_R = Math::sqrt(signal_total_r_sqr / p_frame_count);
 
-	float DB_RMS = Math::linear_to_db(RMS_L > RMS_R ? RMS_L : RMS_R); // Use the larger one
+	float RMS = RMS_L > RMS_R ? RMS_L : RMS_R; // Use the larger one
+	float DB_RMS = Math::linear_to_db(RMS);
 
-	bool now_below_threshhold = DB_RMS < base->threshhold_db;
-	if (now_below_threshhold && !below_threshhold) {
+	bool now_below_threshold = DB_RMS < base->threshold_db;
+	if (now_below_threshold && !below_threshold) {
 		// Start ducking envelope
 
 		for (int i = 0; i < p_frame_count; i++) {
 			p_dst_frames[i] = p_src_frames[i] * (1.f - (1.f * i / p_frame_count));
 		}
-	} else if (!now_below_threshhold && below_threshhold) {
+	} else if (!now_below_threshold && below_threshold) {
 		// End ducking envelope
 
 		for (int i = 0; i < p_frame_count; i++) {
 			p_dst_frames[i] = p_src_frames[i] * (1.f * i / p_frame_count);
 		}
-	} else if (now_below_threshhold) {
+	} else if (now_below_threshold) {
 		// Still ducking, output silence
 
 		for (int i = 0; i < p_frame_count; i++) {
 			p_dst_frames[i] = AudioFrame(0.f, 0.f);
 		}
-	} else if (!now_below_threshhold) {
+	} else if (!now_below_threshold) {
 		// Still not ducking, forward the signal
 
 		for (int i = 0; i < p_frame_count; i++) {
@@ -76,7 +73,7 @@ void AudioEffectGateInstance::process(const AudioFrame *p_src_frames, AudioFrame
 		}
 	}
 
-	below_threshhold = now_below_threshhold;
+	below_threshold = now_below_threshold;
 }
 
 Ref<AudioEffectInstance> AudioEffectGate::instantiate() {
@@ -87,17 +84,17 @@ Ref<AudioEffectInstance> AudioEffectGate::instantiate() {
 	return ins;
 }
 
-void AudioEffectGate::set_threshhold_db(float p_threshhold_db) {
-	threshhold_db = p_threshhold_db;
+void AudioEffectGate::set_threshold_db(float p_threshold_db) {
+	threshold_db = p_threshold_db;
 }
 
-float AudioEffectGate::get_threshhold_db() const {
-	return threshhold_db;
+float AudioEffectGate::get_threshold_db() const {
+	return threshold_db;
 }
 
 void AudioEffectGate::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("set_threshhold_db", "threshhold"), &AudioEffectGate::set_threshhold_db);
-	ClassDB::bind_method(D_METHOD("get_threshhold_db"), &AudioEffectGate::get_threshhold_db);
+	ClassDB::bind_method(D_METHOD("set_threshold_db", "threshold"), &AudioEffectGate::set_threshold_db);
+	ClassDB::bind_method(D_METHOD("get_threshold_db"), &AudioEffectGate::get_threshold_db);
 
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "threshhold_db", PROPERTY_HINT_RANGE, "-60,0,0.01,suffix:dB"), "set_threshhold_db", "get_threshhold_db");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "threshold_db", PROPERTY_HINT_RANGE, "-100,0,0.01,suffix:dB"), "set_threshold_db", "get_threshold_db");
 }

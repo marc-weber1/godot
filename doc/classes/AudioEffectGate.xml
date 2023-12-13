@@ -4,13 +4,13 @@
 		Adds a gate to the audio bus
 	</brief_description>
 	<description>
-		Silences audio when it is below the threshhold. Useful for processing microphones with background noise.
+		Silences audio when it is below the threshold. Useful for processing microphones with background noise.
 	</description>
 	<tutorials>
 		<link title="Audio buses">$DOCS_URL/tutorials/audio/audio_buses.html</link>
 	</tutorials>
 	<members>
-		<member name="threshhold_db" type="float" setter="set_threshold_db" getter="get_threshold_db" default="-30.0">
+		<member name="threshold_db" type="float" setter="set_threshold_db" getter="get_threshold_db" default="-30.0">
 			Threshold below which the audio is silenced, in decibels. Value can range from -60 to 0.
 		</member>
 	</members>
