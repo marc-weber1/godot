@@ -13,6 +13,8 @@ class AudioEffectGateInstance : public AudioEffectInstance {
 
 	Ref<AudioEffectGate> base;
 
+    bool below_threshhold = false;
+
 public:
 	virtual void process(const AudioFrame *p_src_frames, AudioFrame *p_dst_frames, int p_frame_count) override;
 };
