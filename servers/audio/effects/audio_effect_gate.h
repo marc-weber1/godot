@@ -1,5 +1,4 @@
 
-
 #ifndef AUDIO_EFFECT_GATE_H
 #define AUDIO_EFFECT_GATE_H
 
@@ -12,6 +11,8 @@ class AudioEffectGateInstance : public AudioEffectInstance {
 	friend class AudioEffectGate;
 
 	Ref<AudioEffectGate> base;
+
+    bool below_threshhold = false;
 
 public:
 	virtual void process(const AudioFrame *p_src_frames, AudioFrame *p_dst_frames, int p_frame_count) override;
